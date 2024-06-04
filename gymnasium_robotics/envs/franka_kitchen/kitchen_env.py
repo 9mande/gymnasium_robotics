@@ -18,6 +18,8 @@ This project is covered by the Apache 2.0 License.
 from typing import Any, Optional
 
 import numpy as np
+import jax.numpy as jnp
+
 from gymnasium import spaces
 from gymnasium.utils.ezpickle import EzPickle
 
@@ -25,22 +27,22 @@ from gymnasium_robotics.core import GoalEnv
 from gymnasium_robotics.envs.franka_kitchen.franka_env import FrankaRobot
 
 OBS_ELEMENT_INDICES = {
-    "bottom burner": np.array([11, 12]),
-    "top burner": np.array([15, 16]),
-    "light switch": np.array([17, 18]),
-    "slide cabinet": np.array([19]),
-    "hinge cabinet": np.array([20, 21]),
-    "microwave": np.array([22]),
-    "kettle": np.array([23, 24, 25, 26, 27, 28, 29]),
+    "bottom burner": jnp.array([11, 12]),
+    "top burner": jnp.array([15, 16]),
+    "light switch": jnp.array([17, 18]),
+    "slide cabinet": jnp.array([19]),
+    "hinge cabinet": jnp.array([20, 21]),
+    "microwave": jnp.array([22]),
+    "kettle": jnp.array([23, 24, 25, 26, 27, 28, 29]),
 }
 OBS_ELEMENT_GOALS = {
-    "bottom burner": np.array([-0.88, -0.01]),
-    "top burner": np.array([-0.92, -0.01]),
-    "light switch": np.array([-0.69, -0.05]),
-    "slide cabinet": np.array([0.37]),
-    "hinge cabinet": np.array([0.0, 1.45]),
-    "microwave": np.array([-0.75]),
-    "kettle": np.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
+    "bottom burner": jnp.array([-0.88, -0.01]),
+    "top burner": jnp.array([-0.92, -0.01]),
+    "light switch": jnp.array([-0.69, -0.05]),
+    "slide cabinet": jnp.array([0.37]),
+    "hinge cabinet": jnp.array([0.0, 1.45]),
+    "microwave": jnp.array([-0.75]),
+    "kettle": jnp.array([-0.23, 0.75, 1.62, 0.99, 0.0, 0.0, -0.06]),
 }
 BONUS_THRESH = 0.3
 
@@ -243,7 +245,7 @@ class KitchenEnv(GoalEnv, EzPickle):
             **kwargs,
         )
 
-        self.robot_env.init_qpos = np.array(
+        self.robot_env.init_qpos = jnp.array(
             [
                 1.48388023e-01,
                 -1.76848573e00,
@@ -310,8 +312,8 @@ class KitchenEnv(GoalEnv, EzPickle):
         obs = self._get_obs(robot_obs)
 
         assert (
-            int(np.round(1.0 / self.robot_env.dt)) == self.metadata["render_fps"]
-        ), f'Expected value: {int(np.round(1.0 / self.robot_env.dt))}, Actual value: {self.metadata["render_fps"]}'
+            int(jnp.round(1.0 / self.robot_env.dt)) == self.metadata["render_fps"]
+        ), f'Expected value: {int(jnp.round(1.0 / self.robot_env.dt))}, Actual value: {self.metadata["render_fps"]}'
 
         self.action_space = self.robot_env.action_space
         self.observation_space = spaces.Dict(
@@ -319,8 +321,8 @@ class KitchenEnv(GoalEnv, EzPickle):
                 desired_goal=spaces.Dict(
                     {
                         task: spaces.Box(
-                            -np.inf,
-                            np.inf,
+                            -jnp.inf,
+                            jnp.inf,
                             shape=goal.shape,
                             dtype="float64",
                         )
@@ -330,8 +332,8 @@ class KitchenEnv(GoalEnv, EzPickle):
                 achieved_goal=spaces.Dict(
                     {
                         task: spaces.Box(
-                            -np.inf,
-                            np.inf,
+                            -jnp.inf,
+                            jnp.inf,
                             shape=goal.shape,
                             dtype="float64",
                         )
@@ -339,7 +341,7 @@ class KitchenEnv(GoalEnv, EzPickle):
                     }
                 ),
                 observation=spaces.Box(
-                    -np.inf, np.inf, shape=obs["observation"].shape, dtype="float64"
+                    -jnp.inf, jnp.inf, shape=obs["observation"].shape, dtype="float64"
                 ),
             )
         )
@@ -355,13 +357,13 @@ class KitchenEnv(GoalEnv, EzPickle):
 
     def compute_reward(
         self,
-        achieved_goal: "dict[str, np.ndarray]",
-        desired_goal: "dict[str, np.ndarray]",
+        achieved_goal: "dict[str, jnp.ndarray]",
+        desired_goal: "dict[str, jnp.ndarray]",
         info: "dict[str, Any]",
     ):
         self.step_task_completions.clear()
         for task in self.tasks_to_complete:
-            distance = np.linalg.norm(achieved_goal[task] - desired_goal[task])
+            distance = jnp.linalg.norm(achieved_goal[task] - desired_goal[task])
             complete = distance < BONUS_THRESH
             if complete:
                 self.step_task_completions.append(task)
@@ -389,7 +391,7 @@ class KitchenEnv(GoalEnv, EzPickle):
         }
 
         obs = {
-            "observation": np.concatenate((robot_obs, obj_qpos, obj_qvel)),
+            "observation": jnp.concatenate((robot_obs, obj_qpos, obj_qvel)),
             "achieved_goal": achieved_goal,
             "desired_goal": self.goal,
         }
